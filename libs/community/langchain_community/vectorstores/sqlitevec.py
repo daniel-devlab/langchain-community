@@ -95,11 +95,11 @@ class SQLiteVec(VectorStore):
         )
         self._connection.execute(
             f"""
-                CREATE TRIGGER IF NOT EXISTS {self._table}_embed_text 
+                CREATE TRIGGER IF NOT EXISTS {self._table}_embed_text
                 AFTER INSERT ON {self._table}
                 BEGIN
                     INSERT INTO {self._table}_vec(rowid, text_embedding)
-                    VALUES (new.rowid, new.text_embedding) 
+                    VALUES (new.rowid, new.text_embedding)
                     ;
                 END;
             """
@@ -124,7 +124,8 @@ class SQLiteVec(VectorStore):
         if max_id is None:  # no text added yet
             max_id = 0
 
-        embeds = self._embedding.embed_documents(list(texts))
+        texts = list(texts)
+        embeds = self._embedding.embed_documents(texts)
         if not metadatas:
             metadatas = [{} for _ in texts]
         data_input = [
@@ -146,12 +147,12 @@ class SQLiteVec(VectorStore):
         self, embedding: List[float], k: int = 4, **kwargs: Any
     ) -> List[Tuple[Document, float]]:
         sql_query = f"""
-            SELECT 
+            SELECT
                 text,
                 metadata,
                 distance
             FROM {self._table} AS e
-            INNER JOIN {self._table}_vec AS v on v.rowid = e.rowid  
+            INNER JOIN {self._table}_vec AS v on v.rowid = e.rowid
             WHERE
                 v.text_embedding MATCH ?
                 AND k = ?
